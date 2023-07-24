@@ -22,22 +22,22 @@ def PMatrix(graph, v):
 
 def pageRank_iterative(graph, alpha, v):
     P = PMatrix(graph, v)
-    x_0 = [0 for i in range(P.shape[1])] # one possible initialization
     threshold= 1e-16
     error = 1
     v = np.array(v)
+    x_0 = v
     
     while error > threshold:
         x_1 = alpha*(P @ x_0) + (1-alpha)*v
         error = np.linalg.norm((x_1 - x_0), ord=1) # which loss function to use?
         x_0 = x_1
     
-    return np.round(x_1,3)
+    return x_1
 
 def pageRank(graph, alpha, v):
     P = PMatrix(graph, v)
     N = len(graph.nodes)
     x = np.linalg.solve(np.eye(N,N) - alpha*P, (1-alpha)*(np.zeros(N)+v))
     
-    return np.round(x,3)
+    return x
     

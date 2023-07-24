@@ -24,7 +24,7 @@ def nx_pagerank(file_name, alfa):
     # and v (should be) a uniformly distributed stochastic vector (v here 
     # should be equivalent to "personalization")
     pr = dict(sorted(pr.items(), key=lambda x: x[0]))
-    return np.round(list(pr.values()), 3)
+    return list(pr.values())
 
 def test(file_name, alpha):
     nx_result = nx_pagerank(file_name, alpha)
@@ -48,7 +48,7 @@ def test(file_name, alpha):
 if __name__ == '__main__':
     
     alpha = 0.85
-    result = test('../dataset/graph_5.txt', alpha)
+    result = test('../dataset/graph_1.txt', alpha)
     
     print(result[0])
     print()
