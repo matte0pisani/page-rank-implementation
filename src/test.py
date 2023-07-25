@@ -34,9 +34,9 @@ def test(file_name, alpha):
     diff = abs(nx_result - my_result)
     sse = np.sum(diff ** 2)
     mse = sse / len(diff)
-    sum_residuals = np.sum(diff) / len(diff)
+    mean_error = np.sum(diff) / len(diff)
     order = np.argsort(nx_result) == np.argsort(my_result)
-    return sse, mse, sum_residuals, order
+    return sse, mse, mean_error, order
 
 # =============================================================================
 # TO FIX
