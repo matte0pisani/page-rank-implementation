@@ -5,12 +5,13 @@ Created on Sun Jul 23 19:02:39 2023
 @author: matte
 """
 import numpy as np
+import GraphConstructor as gc
     
 def PMatrix(graph, v):
     # transpose and normalize the adiacency matrix
     AT = graph.adiacency_matrix().T
     D = np.diag(AT.sum(axis=0))
-    P_signed = AT @ np.linalg.pinv(D)
+    P_signed = np.matmul(AT, np.linalg.pinv(D))
     
     # fill out dangling nodes, if any (use strongly preferential approach)
     # TO DO: how to without iteration? use c vector
@@ -28,16 +29,26 @@ def pageRank_iterative(graph, alpha, v):
     x_0 = v
     
     while error > threshold:
-        x_1 = alpha*(P @ x_0) + (1-alpha)*v
+        x_1 = alpha*(np.matmul(P, x_0)) + (1-alpha)*v
         error = np.linalg.norm((x_1 - x_0), ord=1) # which loss function to use?
         x_0 = x_1
     
     return x_1
 
 def pageRank(graph, alpha, v):
-    P = PMatrix(graph, v)
+    P = PMatrix(graph, v)   
     N = len(graph.nodes)
     x = np.linalg.solve(np.eye(N,N) - alpha*P, (1-alpha)*(np.zeros(N)+v))
     
     return x
+   
+        
+if __name__ == '__main__':
+
+    g = gc.build_graph("../dataset/graph_1.txt")
+    alpha = 0.85
+    v = 1/len(g.nodes)
+    PR = pageRank(g, alpha, v)
+    
+    print(PR)
     

@@ -3,13 +3,9 @@
 Created on Sun Jul 23 17:09:12 2023
 
 @author: matte
-
-reformulate (otws == TWDS)
 """
 
 import numpy as np
-import GraphConstructor as gc
-import PageRankCalculator as prc
 
 class Graph: 
     # note that all the creation methods are used only when initializing
@@ -75,13 +71,4 @@ class Node:
         
     def __repr__(self):
         return "node " + self.name
-        
-        
-if __name__ == '__main__':
 
-    g = gc.build_graph("../dataset/graph_5.txt")
-    alpha = 0.85
-    v = 1/len(g.nodes)
-    PR = prc.pageRank(g, alpha, v)
-    
-    print(PR)
