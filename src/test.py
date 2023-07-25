@@ -20,22 +20,20 @@ def nx_pagerank(file_name, alfa):
         G.add_edge(*t)
     
     pr = nx.pagerank(G, alpha=alfa) 
-    # see online documentation for nx.pagerank; by default, alpha is 0.85
-    # and v (should be) a uniformly distributed stochastic vector (v here 
-    # should be equivalent to "personalization")
     pr = dict(sorted(pr.items(), key=lambda x: x[0]))
     return list(pr.values())
 
 def test(file_name, alpha):
     nx_result = nx_pagerank(file_name, alpha)
     g = gc.build_graph(file_name)
-    my_result = prc.pageRank(g, alpha, np.repeat(1/len(g.nodes), len(g.nodes)))
+    my_result = prc.pageRank(g, alpha)
     
     diff = abs(nx_result - my_result)
     sse = np.sum(diff ** 2)
     mse = sse / len(diff)
     mean_error = np.sum(diff) / len(diff)
     order = np.argsort(nx_result) == np.argsort(my_result)
+    
     return sse, mse, mean_error, order
 
 # =============================================================================
@@ -48,7 +46,7 @@ def test(file_name, alpha):
 if __name__ == '__main__':
     
     alpha = 0.85
-    result = test('../dataset/graph_1.txt', alpha)
+    result = test('../dataset/graph_6.txt', alpha)
     
     print(result[0])
     print()
@@ -56,4 +54,4 @@ if __name__ == '__main__':
     print()
     print(result[2])
     print()
-    print(result[3])
+    print(all(result[3]))
