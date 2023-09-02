@@ -15,16 +15,18 @@ def PMatrix(graph, v):
     
     return P
 
-def pageRank(graph, alpha=0.85, v=None, algo="iterative"):
+def pageRank(graph, alpha=0.85, v=None, algo="iterative", rround="yes"):
+    # for the meaning of the variables, see PR1 paper
     if algo == "exact":
         return pageRank_exact(graph, alpha, v)
     
-    P = PMatrix(graph, v)
+    N = len(graph.nodes)
+    P = PMatrix(graph, v) # this P still doesn't account for sink nodes
     c = np.sum(P, axis=0) == 0
-    x_0 = np.repeat(1/len(graph.nodes), len(graph.nodes))
-    dangling = np.repeat(1/len(graph.nodes), len(graph.nodes))
+    x_0 = np.repeat(1.0/N, N)
+    dangling = np.repeat(1.0/N, N)
     if v is None:
-        v = np.repeat(1/len(graph.nodes), len(graph.nodes))
+        v = np.repeat(1.0/N, N)
     
     threshold= 1e-16
     error = 1
@@ -34,7 +36,10 @@ def pageRank(graph, alpha=0.85, v=None, algo="iterative"):
         error = np.linalg.norm((x - x_0), ord=1) # which loss function to use?
         x_0 = x
     
-    return x
+    if rround == "yes":
+        return np.round(x, 3)
+    else: 
+        return np.array(x)
 
 # TO REVIEW
 def pageRank_exact(graph, alpha, v): 
@@ -50,7 +55,7 @@ if __name__ == '__main__':
     g = gc.build_graph("../dataset/graph_5.txt")
     alpha = 0.85
     v = 1/len(g.nodes)
-    PR = pageRank(g, alpha, v)
+    PR = pageRank(g, alpha, v, rround="no")
     
     print(PR)
     

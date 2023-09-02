@@ -20,18 +20,26 @@ def nx_pagerank(file_name, alfa):
         G.add_edge(*t)
     
     pr = nx.pagerank(G, alpha=alfa) 
-    pr = dict(sorted(pr.items(), key=lambda x: x[0]))
-    return list(pr.values())
+    # pr = dict(sorted(pr.items(), key=lambda x: x[0]))
+    # The point is the following. nx doesn't allow to explicitly order nodes, for what I
+    # know. So it will perform the PageRank algorithm with his own order (which is queue-
+    # like). Then, to order the pg values results obtained, we try to order them by using
+    # the above criterion, which doesn't order like we would like. This is because, even
+    # if we are ordering by key, the key is not the "names" attribute, but (for what I've
+    # come to understand) an ID given by nx to the nodes based on the order they've been 
+    # seen. In graph_1/2/3/4 and IBM this doesn't occur as all or most of the graphs are
+    # encountered in alphabetical order.
+    return np.array(list(pr.values()))
 
 def test(file_name, alpha):
     nx_result = nx_pagerank(file_name, alpha)
     g = gc.build_graph(file_name)
-    my_result = prc.pageRank(g, alpha)
+    my_result = prc.pageRank(g, alpha, rround="no")
     
     diff = abs(nx_result - my_result)
     sse = np.sum(diff ** 2)
     mse = sse / len(diff)
-    mean_error = np.sum(diff) / len(diff)
+    mean_error = np.sum(diff) / len(diff) #  maybe compare with first significative figure
     order = np.argsort(nx_result) == np.argsort(my_result)
     
     return sse, mse, mean_error, order
