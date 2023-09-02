@@ -38,6 +38,7 @@ class Graph:
         self.nodes.sort(key=lambda node: int(node.name))
         
     def adiacency_matrix(self):
+        # works if directed graph or if each indirected edge is repeated in both its directions
         A = np.zeros((len(self.nodes), len(self.nodes)))
         for i in range(len(self.nodes)):
             children = [node.name for node in self.nodes[i].children]
