@@ -1,15 +1,39 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jul 24 12:43:56 2023
-
 @author: matte
+
+This is the testing module for my PageRank implementation. To test it, we compare
+the pg values obtained using the NetworkX PageRank implementation w.r.t. mine, using
+the exact same parameters for alpha, v, x_0 and so on.
+
 """
 import networkx as nx
 import numpy as np
-import PageRankCalculator as prc
-import GraphConstructor as gc
+from optparse import OptionParser
+import src.PageRankCalculator as prc
+from src.GraphConstructor import build_graph
 
-def nx_pagerank(file_name, alfa):
+def nx_pagerank(file_name, alfa, rround="yes"):
+    """
+    This procedure applies nx's implementation on the given graph with the
+    given damping parameter.
+
+    Parameters
+    ----------
+    file_name : string
+        The name of the file containing the desired graph to process.
+    alfa : float
+        The damping parameter.
+    rround (optional): string
+        If "yes", rounds the pg values to the first 3 decimal digits.
+
+    Returns
+    -------
+    numpy.array
+        An array containing the pg values for all nodes, in the order they
+        appear inside the file.
+
+    """
     with open(file_name) as f:
         lines = f.readlines()
     
@@ -20,32 +44,59 @@ def nx_pagerank(file_name, alfa):
         G.add_edge(*t)
     
     pr = nx.pagerank(G, alpha=alfa) 
-    # pr = dict(sorted(pr.items(), key=lambda x: x[0]))
-    # The point is the following. nx doesn't allow to explicitly order nodes, for what I
-    # know. So it will perform the PageRank algorithm with his own order (which is queue-
-    # like). Then, to order the pg values results obtained, we try to order them by using
-    # the above criterion, which doesn't order like we would like. This is because, even
-    # if we are ordering by key, the key is not the "names" attribute, but (for what I've
-    # come to understand) an ID given by nx to the nodes based on the order they've been 
-    # seen. In graph_1/2/3/4 and IBM this doesn't occur as all or most of the graphs are
-    # encountered in alphabetical order.
-    return np.array(list(pr.values()))
+    # pr = dict(sorted(pr.items(), key=lambda x: x[0])) SEE OLDER COMMITS
+    if rround == "yes":
+        return np.round(list(pr.values()), 3)
+    else:
+        return np.array(list(pr.values()))
+
+
 
 def test(file_name, alpha):
-    nx_result = nx_pagerank(file_name, alpha)
-    g = gc.build_graph(file_name)
-    my_result = prc.pageRank(g, alpha, rround="no")
+    """
+    Test procedure for comparing my algorithm with nx's. The algorithm will pass the
+    test over a certain graph if the error made over each nodes' pg value is less than
+    a thousandth of the expected value according to nx.
+
+    Parameters
+    ----------
+    file_name : string
+        The graph to test on.
+    alpha : float
+        Damping parameter.
+
+    Returns
+    -------
+    None.
+
+    """
+    nx_result = nx_pagerank(file_name, alpha, rround="no")
+    my_result = prc.pageRank(build_graph(file_name), alpha, rround="no")
+
+    mse = np.mean((my_result-nx_result)**2)
+    same_order_num = np.sum(np.argsort(nx_result) == np.argsort(my_result))
     
-    diff = abs(nx_result - my_result)
-    sse = np.sum(diff ** 2)
-    mse = sse / len(diff)
-    mean_error = np.sum(diff) / len(diff) #  maybe compare with first significative figure
-    order = np.argsort(nx_result) == np.argsort(my_result)
+    try: # TO DO: check if admissible sintax, or if there's a better way to do it
+        assert(all(abs(my_result - nx_result) < nx_result / 1000))   # TO DO: make it a one
+        error = "thousandth"
+    except:
+        try: 
+            assert(all(abs(my_result - nx_result) < nx_result / 100))
+            error = "hundredth"
+        except:
+            assert(all(abs(my_result - nx_result) < nx_result / 10))
+            error = "tenth"
     
-    return sse, mse, mean_error, order
+    print()
+    print("PageRank test result for", file_name)
+    print("---------------------------------------------------------------------------------------------")
+    print("Each pg value differs from the expected one for less than a", error, "of the expected value")
+    print("The MSE is:", mse)
+    print("The nodes are ranked in the same way for", same_order_num, "over", len(my_result), "nodes")
+    print()
 
 # =============================================================================
-# TO FIX
+# TO DO: understand & use (...?)
 # nx.draw(G, with_labels=True, node_size=2000, edge_color='#eb4034', width=3, font_size=16, font_weight=500, arrowsize=20, alpha=0.8)
 # plt.savefig("graph.png")
 # =============================================================================
@@ -53,13 +104,20 @@ def test(file_name, alpha):
         
 if __name__ == '__main__':
     
-    alpha = 0.85
-    result = test('../dataset/graph_6.txt', alpha)
+    op = OptionParser()
+    op.add_option('-f',
+                  dest='input_file',
+                  help='CSV filename',
+                  default='graph_1.txt') # TO DO: test more together
+    op.add_option('--alpha',
+                   dest='alpha',
+                   help='Damping factor (float)',
+                   default=0.85,
+                   type='float')
+
+    (options, args) = op.parse_args()
+
+    file_name = 'dataset/' + options.input_file
+    alpha = options.alpha
     
-    print(result[0])
-    print()
-    print(result[1])
-    print()
-    print(result[2])
-    print()
-    print(all(result[3]))
+    test(file_name, alpha)
