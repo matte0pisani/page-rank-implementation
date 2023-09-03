@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Jul 23 17:09:12 2023
-
 @author: matte
+This module is to model graphs and nodes; I added only the essential aspects of the two, without
+implementing the full ADT. Note that, apart from the adiacency matrix method, we never really
+use those classes except when building the graph using the "build_graph" method.
+
 """
 
 import numpy as np
 
 class Graph: 
-    # note that all the creation methods are used only when initializing
-    # the graph from a file
+    """
+    This class models a graph for the PageRank problem. It consists essentialy of a list
+    of nodes. It has methods to check the presence of a node, find a node (or create one),
+    link two nodes and compute the adiacency matrix.
+    """
     def __init__(self):
         self.nodes = []
     
@@ -34,11 +39,7 @@ class Graph:
         parent_node.link_child(child_node)
         child_node.link_parent(parent_node)
         
-    def sort_nodes(self):
-        self.nodes.sort(key=lambda node: int(node.name))
-        
     def adiacency_matrix(self):
-        # works if directed graph or if each indirected edge is repeated in both its directions
         A = np.zeros((len(self.nodes), len(self.nodes)))
         for i in range(len(self.nodes)):
             children = [node.name for node in self.nodes[i].children]
@@ -48,10 +49,11 @@ class Graph:
             
 
 class Node:
-    # questions: 
-    # should names be both strings and integers?
-    # should enforce coherence (someone's son needs to have the first as father)?
-    # should names be unique? How to enforce it? We are assuming only, up to now.
+    """
+    This class represents a node. A node has some children and parents, which we could 
+    link to it using its methods.
+    """
+    # TODO: enforce symmetry in father-son relations and uniqueness of names
     
     def __init__(self, name):
         self.name = name

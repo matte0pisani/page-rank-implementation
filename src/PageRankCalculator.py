@@ -62,10 +62,11 @@ def pageRank(graph, alpha=0.85, v=None, algo="iterative", rround="yes"):
         An array containing the pg value for each node. Each value refers to the node in graph
         which holds the same position in the graph's node list.
     """
-    # TO DO implement more policies for sink nodes
-    # TO DO create iteration limit
-    # TO DO add different initializations for x_0
+    # TO DO implement more policies for sink nodes?
+    # TO DO create iteration limit?
+    # TO DO add different initializations for x_0?
     # TO DO should directly work with array or lists?
+    # TO DO should return a dictionary?
     if algo == "exact":
         return pageRank_exact(graph, alpha, v, rround)
     
