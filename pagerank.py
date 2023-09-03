@@ -20,7 +20,7 @@ if __name__ == '__main__':
     op.add_option('-f',
                   dest='input_file',
                   help='CSV filename',
-                  default='dataset/graph_1.txt')
+                  default='graph_1.txt')
     op.add_option('--alpha',
                    dest='alpha',
                    help='Damping factor (float)',
@@ -45,6 +45,6 @@ if __name__ == '__main__':
 
     g = build_graph(file_path)
 
-    PR1 = pageRank(g, alpha) # TO DO: specify more options here
+    PR1 = pageRank(g, alpha, algo="iterative") # TO DO: specify more options here
     print("PageRank:")
     print(PR1)

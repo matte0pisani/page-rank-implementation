@@ -5,6 +5,9 @@
 This is the testing module for my PageRank implementation. To test it, we compare
 the pg values obtained using the NetworkX\ PageRank implementation w.r.t. mine, using
 the exact same parameters for alpha, v, x_0 and so on.
+This module can be invoked as:
+    
+    python test.py -f <first graph file name>[other graphs separated by commas] --alpha <dumping factor>
 
 """
 
@@ -74,7 +77,7 @@ def test(file_name, alpha):
 
     """
     nx_result = nx_pagerank(file_name, alpha, rround="no")
-    my_result = prc.pageRank(build_graph(file_name), alpha, rround="no")
+    my_result = prc.pageRank(build_graph(file_name), alpha, algo="exact", rround="no")
 
     mse = np.mean((my_result-nx_result)**2)
     same_order_num = np.sum(np.argsort(nx_result) == np.argsort(my_result))
