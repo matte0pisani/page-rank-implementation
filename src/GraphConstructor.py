@@ -5,7 +5,7 @@ Created on Sun Jul 23 18:50:01 2023
 @author: matte
 """
 
-from Graph import Graph
+from src.Graph import Graph
 
 
 def build_graph(file_name):

@@ -5,7 +5,7 @@ Created on Sun Jul 23 19:02:39 2023
 @author: matte
 """
 import numpy as np
-import GraphConstructor as gc
+import src.GraphConstructor as gc
     
 def PMatrix(graph, v):
     # transpose and normalize the adiacency matrix
