@@ -3,10 +3,13 @@
 @author: matte
 
 This is the testing module for my PageRank implementation. To test it, we compare
-the pg values obtained using the NetworkX PageRank implementation w.r.t. mine, using
+the pg values obtained using the NetworkX\ PageRank implementation w.r.t. mine, using
 the exact same parameters for alpha, v, x_0 and so on.
 
 """
+
+#  TO DO: use doctest sintax
+
 import networkx as nx
 import numpy as np
 from optparse import OptionParser
@@ -108,7 +111,9 @@ if __name__ == '__main__':
     op.add_option('-f',
                   dest='input_file',
                   help='CSV filename',
-                  default='graph_1.txt') # TO DO: test more together
+                  default='graph_1.txt, graph_2.txt,' +
+                  'graph_3.txt, graph_4.txt, graph_5.txt, graph_6.txt,' +
+                  'graph_7.txt, graph_8.txt, graph_9.txt, graph_10.txt, graph_11.txt')
     op.add_option('--alpha',
                    dest='alpha',
                    help='Damping factor (float)',
@@ -117,7 +122,10 @@ if __name__ == '__main__':
 
     (options, args) = op.parse_args()
 
-    file_name = 'dataset/' + options.input_file
+    file_names = options.input_file
+    file_names_list = file_names.split(',')
+    
     alpha = options.alpha
     
-    test(file_name, alpha)
+    for file_name in file_names_list:
+        test('dataset/' + file_name.strip(), alpha)
