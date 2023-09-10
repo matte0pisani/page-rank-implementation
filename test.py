@@ -7,7 +7,7 @@ the pg values obtained using the NetworkX PageRank implementation w.r.t. mine, u
 the exact same parameters for alpha, v, x_0 and the same algorithm version.
 This module can be invoked as:
     
-    python test.py [-f <list of graphs to test on> --alpha <dumping factor>]
+    python test.py [-f <list of graphs to test on> --alpha <dumping factor> --profiling_number <profiling number>]
 
 If no argument is given, the tests will be run on all available graphs.
 
