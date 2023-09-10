@@ -19,8 +19,7 @@ if __name__ == '__main__':
     op = OptionParser()
     op.add_option('-f',
                   dest='input_file',
-                  help='CSV filename',
-                  default='graph_1.txt')
+                  help='CSV filename')
     op.add_option('--alpha',
                    dest='alpha',
                    help='Damping factor (float)',

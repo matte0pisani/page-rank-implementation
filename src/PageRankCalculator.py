@@ -6,7 +6,7 @@ This module contains the actual implementation of the algorithm on a generic gra
 """
 import numpy as np
     
-def PMatrix(graph):
+def P_matrix(graph):
     """
     Compute the P matrix to use in the PageRank algorithm (see Langville and Gleich). 
     It does not embed a policy for dealing with sink nodes (their column
@@ -20,11 +20,11 @@ def PMatrix(graph):
     Returns
     -------
     P : numpyarray
-        A 2 dimensional array equal to the trasposed adiacency matrix multiplied for the
+        A 2 dimensional array equal to the trasposed adjacency matrix multiplied for the
         Penrose-pseudoinverse of the D matrix.
 
     """
-    AT = graph.adiacency_matrix().T
+    AT = graph.adjacency_matrix().T
     D = np.diag(AT.sum(axis=0))
     P = np.matmul(AT, np.linalg.pinv(D))
     
@@ -71,7 +71,7 @@ def pageRank(graph, alpha=0.85, v=None, algo="iterative", rround="yes"):
         return pageRank_exact(graph, alpha, v, rround)
     
     N = len(graph.nodes)
-    P = PMatrix(graph)
+    P = P_matrix(graph)
     c = np.sum(P, axis=0) == 0
     x = np.repeat(1.0/N, N)   # initialization vector
     dangling = np.repeat(1.0/N, N)  # sink nodes policy vector
@@ -118,7 +118,7 @@ def pageRank_exact(graph, alpha=0.85, v=None, rround="yes"):
         which holds the same position in the graph's node list.
 
     """
-    P = PMatrix(graph)   
+    P = P_matrix(graph)   
     N = len(graph.nodes)
     if v is None:
         v = np.repeat(1.0/N, N)
@@ -134,4 +134,6 @@ def pageRank_exact(graph, alpha=0.85, v=None, rround="yes"):
         return np.round(x, 3)
     else: 
         return x
+
+# TO DO: method for printing stuff
     

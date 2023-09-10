@@ -39,7 +39,7 @@ class Graph:
         parent_node.link_child(child_node)
         child_node.link_parent(parent_node)
         
-    def adiacency_matrix(self):
+    def adjacency_matrix(self):
         A = np.zeros((len(self.nodes), len(self.nodes)))
         for i in range(len(self.nodes)):
             children = [node.name for node in self.nodes[i].children]

@@ -35,10 +35,10 @@ def build_graph(file_name):
 
     return graph
 
-def generate_edge_list(num_nods, num_edges):
+def generate_edge_list(num_nods, num_edges, name):
     """
     It creates a randomly generated edge list with a given number of nodes and of edges.
-    The .txt file is saved inside the 'dataset' folder under the name 'graph.txt'
+    The .txt file is saved inside the 'dataset' folder under the given name.
 
     Parameters
     ----------
@@ -46,6 +46,8 @@ def generate_edge_list(num_nods, num_edges):
         The number of different nodes of the graph.
     num_edges : int
         The number of total edges of the graph.
+    name: string
+        The name of the file we want to save.
 
     Returns
     -------
@@ -59,7 +61,7 @@ def generate_edge_list(num_nods, num_edges):
         tail = np.random.choice(num_nods)
         edges.append((head, tail))
     
-    with open("../dataset/graph.txt", "w") as file:
+    with open("../dataset/" + name + ".txt", "w") as file:
         for edge in edges:
             file.write(f"{edge[0]},{edge[1]}\n")
     
