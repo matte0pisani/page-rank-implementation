@@ -3,21 +3,25 @@
 @author: matte
 
 This is the testing module for my PageRank implementation. To test it, we compare
-the pg values obtained using the NetworkX\ PageRank implementation w.r.t. mine, using
-the exact same parameters for alpha, v, x_0 and so on.
+the pg values obtained using the NetworkX PageRank implementation w.r.t. mine, using
+the exact same parameters for alpha, v, x_0 and the same algorithm version.
 This module can be invoked as:
     
-    python test.py -f <first graph file name>[other graphs separated by commas] --alpha <dumping factor>
+    python test.py [-f <list of graphs to test on> --alpha <dumping factor>]
+
+If no argument is given, the tests will be run on all available graphs.
 
 """
 
-#  TO DO: use doctest sintax
+# TO DO: use doctest sintax
+# TO DO: download bigger graphs
 
 import networkx as nx
 import numpy as np
 from optparse import OptionParser
 import src.PageRankCalculator as prc
 from src.GraphConstructor import build_graph
+import timeit
 
 def nx_pagerank(file_name, alfa, rround="yes"):
     """
@@ -49,8 +53,7 @@ def nx_pagerank(file_name, alfa, rround="yes"):
         t = tuple(line.strip().split(','))
         G.add_edge(*t)
     
-    pr = nx.pagerank(G, alpha=alfa) 
-    # pr = dict(sorted(pr.items(), key=lambda x: x[0])) SEE OLDER COMMITS
+    pr = nx.pagerank(G, alpha=alfa)
     if rround == "yes":
         return np.round(list(pr.values()), 3)
     else:
@@ -58,11 +61,13 @@ def nx_pagerank(file_name, alfa, rround="yes"):
 
 
 
-def test(file_name, alpha):
+def accuracy_test(file_name, alpha, algo):
     """
     Test procedure for comparing my algorithm with nx's. The algorithm will pass the
     test over a certain graph if the error made over each nodes' pg value is less than
-    a thousandth of the expected value according to nx.
+    a tenth of the expected value according to nx.
+    For this test case we consider the iterative version of my algorithm to be compared
+    to nx's.
 
     Parameters
     ----------
@@ -70,43 +75,97 @@ def test(file_name, alpha):
         The graph to test on.
     alpha : float
         Damping parameter.
+    algo: string
+        Specifies if the implementation to be used should be the iterative or the exact one;
+        therefore strings "iterative" and "exact"
 
     Returns
     -------
     None.
 
     """
+    print()
+    print("PageRank test result for", file_name, "using", algo, "version")
+    print("---------------------------------------------------------------------------------------------")
+    
     nx_result = nx_pagerank(file_name, alpha, rround="no")
-    my_result = prc.pageRank(build_graph(file_name), alpha, algo="exact", rround="no")
+    my_result = prc.pageRank(build_graph(file_name), alpha, algo=algo, rround="no")
 
     mse = np.mean((my_result-nx_result)**2)
     same_order_num = np.sum(np.argsort(nx_result) == np.argsort(my_result))
     
-    try: # TO DO: check if admissible sintax, or if there's a better way to do it
-        assert(all(abs(my_result - nx_result) < nx_result / 1000))   # TO DO: make it a one
+    try:
+        np.testing.assert_allclose(my_result, nx_result, rtol=1e-03, err_msg="The actual PR values differ from the desired one by more that 1/1000 of the desired value")
         error = "thousandth"
-    except:
+    except AssertionError as e:
         try: 
-            assert(all(abs(my_result - nx_result) < nx_result / 100))
+            print(e)
+            np.testing.assert_allclose(my_result, nx_result, rtol=1e-02, err_msg="The actual PR values differ from the desired one by more that 1/100 of the desired value")
             error = "hundredth"
-        except:
-            assert(all(abs(my_result - nx_result) < nx_result / 10))
+        except AssertionError as e:
+            print(e)
+            np.testing.assert_allclose(my_result, nx_result, rtol=1e-01, err_msg="The actual PR values differ from the desired one by more that 1/10 of the desired value")
             error = "tenth"
     
     print()
-    print("PageRank test result for", file_name)
-    print("---------------------------------------------------------------------------------------------")
     print("Each pg value differs from the expected one for less than a", error, "of the expected value")
+    print()
     print("The MSE is:", mse)
     print("The nodes are ranked in the same way for", same_order_num, "over", len(my_result), "nodes")
     print()
+    
+def time_test(file_name, alpha, algo, number=10, nx_time=None):
+    """
+    Compute the average execution time of PageRankCalculator.pageRank and .pageRank_exact given the parameters
+    and compare it with the average time of NetworkX's implementation. 
+    The result is printed on the console.
 
-# =============================================================================
-# TO DO: understand & use (...?)
-# nx.draw(G, with_labels=True, node_size=2000, edge_color='#eb4034', width=3, font_size=16, font_weight=500, arrowsize=20, alpha=0.8)
-# plt.savefig("graph.png")
-# =============================================================================
+    Parameters
+    ----------
+    file_name : string
+        The graph to test on.
+    alpha : float
+        Damping parameter.
+    number: int (optional)
+        The number of repeated executions for the two implementations to average on. By default it equals 10.
+    algo: string
+        Specifies if the implementation to be used should be the iterative or the exact one;
+        therefore strings "iterative" and "exact"
+    nx_time: float (optional)
+        The average reference time the implementations should be compared to; if not given it is computed
+        inside the function. The default value is None to represent that no reference time was given to the
+        function.
 
+    Returns
+    -------
+    float tuple
+        The average values for the chosen PageRankCalculator implementation and nx's given the parameters.
+
+    """
+    print()
+    print("Measuring average execution time of the", algo, "algorithm, over", number, "iterations on file", file_name)
+    print("------------------------------------------------------------------------------------------------------------")
+    print()
+    
+    globals()["file_name"] = file_name
+    globals()["alpha"] = alpha
+    globals()["algo"] = algo
+    globals()["number"] = number
+    
+    if nx_time is None:
+        nx_time = timeit.timeit("nx_pagerank(file_name, alpha, rround=\"no\")", globals=globals(), number=10)
+    my_time = timeit.timeit("prc.pageRank(build_graph(file_name), alpha, algo=algo, rround=\"no\")", 
+                            globals=globals(), number=10)
+    
+    comparison = "faster"
+    if(my_time > nx_time):
+        comparison = "slower"
+    
+    print("Average execution time for my algorithm is", my_time, "seconds")
+    print("It is", abs(my_time - nx_time) , "seconds", comparison, "than NetworkX on average")
+    
+    return my_time, nx_time
+    
         
 if __name__ == '__main__':
     
@@ -122,6 +181,11 @@ if __name__ == '__main__':
                    help='Damping factor (float)',
                    default=0.85,
                    type='float')
+    op.add_option('--profiling-number',
+                   dest='number',
+                   help='The number of iterations to use to compute average execution time (int)',
+                   default=10,
+                   type='int')
 
     (options, args) = op.parse_args()
 
@@ -129,6 +193,14 @@ if __name__ == '__main__':
     file_names_list = file_names.split(',')
     
     alpha = options.alpha
+    number = options.number
     
     for file_name in file_names_list:
-        test('dataset/' + file_name.strip(), alpha)
+        path = 'dataset/' + file_name.strip()
+        accuracy_test(path, alpha, "iterative")
+        accuracy_test(path, alpha, "exact")
+        
+        _, nx_time = time_test(path, alpha, "iterative", number)
+        time_test(path, alpha, "exact", number=number, nx_time=nx_time)
+        
+        print()
