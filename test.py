@@ -12,10 +12,6 @@ This module can be invoked as:
 If no argument is given, the tests will be run on all available graphs.
 
 """
-
-# TO DO: use doctest sintax
-# TO DO: download bigger graphs
-
 import networkx as nx
 import numpy as np
 from optparse import OptionParser
@@ -90,7 +86,6 @@ def accuracy_test(file_name, alpha, algo):
     
     nx_result = nx_pagerank(file_name, alpha, rround="no")
     my_result = prc.pageRank(build_graph(file_name), alpha, algo=algo, rround="no")
-
     mse = np.mean((my_result-nx_result)**2)
     same_order_num = np.sum(np.argsort(nx_result) == np.argsort(my_result))
     
@@ -161,8 +156,9 @@ def time_test(file_name, alpha, algo, number=10, nx_time=None):
     if(my_time > nx_time):
         comparison = "slower"
     
-    print("Average execution time for my algorithm is", my_time, "seconds")
-    print("It is", abs(my_time - nx_time) , "seconds", comparison, "than NetworkX on average")
+    print("Average execution time for my algorithm is", my_time / number, "seconds")
+    print("It is", abs(my_time - nx_time) / number, "seconds", comparison, "than NetworkX on average")
+    print()
     
     return my_time, nx_time
     

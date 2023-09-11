@@ -29,11 +29,12 @@ def P_matrix(graph):
     d[d == 0] = 1
     return AT / d
 
-def pageRank(graph, alpha=0.85, max_iterations=400 ,v=None, algo="iterative", rround="yes"):
+def pageRank(graph, alpha=0.85, max_iterations=400, algo="iterative", rround="yes"):
     """
     Returns the PageRank value for each of the nodes of the given graph, using the
     given parameters. It applies the weakly preferential policy for sink nodes (the random
-    surfer is teleported to a random node following a uniform distribution).
+    surfer is teleported to a random node following a uniform distribution). The 
+    personalization vector is considered to be a uniformly distributed one.
 
     Parameters
     ----------
@@ -41,14 +42,10 @@ def pageRank(graph, alpha=0.85, max_iterations=400 ,v=None, algo="iterative", rr
         The graph containing the nodes to compute the PageRank for.
     alpha : float, optional
         The damping parameter of the algorithm. The default is 0.85.
-    v : numpy array, optional
-        Teleportation vector. Each element represent the probability of moving to a certain
-        node in the teleportation step of the random surfer. The default is a uniform distribution
-        over all nodes. For the meaning of v, see the papers.
     algo : string, optional
         Used to distinguish between an iterative application of the algorithm and exact one.
         For the iterative version, it applies the update rule contained in Gleich's paper until
-        convergence (there is no limit of iterations). The pg values vector is initialized
+        convergence or maximum iterations reached. The pg values vector is initialized
         as a uniform distribution over all the nodes.
         The default value of the parameter is "iterative". For the exact version, use "exact".
     rround : string, optional
@@ -63,16 +60,14 @@ def pageRank(graph, alpha=0.85, max_iterations=400 ,v=None, algo="iterative", rr
     """
     
     if algo == "exact":
-        return pageRank_exact(graph, alpha, v, rround)
+        return pageRank_exact(graph, alpha, rround)
     
     N = len(graph)
     P = P_matrix(graph)
     c = np.sum(P, axis=0) == 0
-    u = np.repeat(1.0/N, N)
-    x = u.copy()   # initialization vector
-    dangling = u.copy()  # sink nodes policy vector
-    if v is None:   # teleportation vector
-        v = u.copy()
+    v = np.repeat(1.0/N, N)  # teleportation vector
+    x = v.copy()   # initialization vector
+    dangling = v.copy()  # sink nodes policy vector
     
     threshold= 1e-16
     error = 1
@@ -88,7 +83,7 @@ def pageRank(graph, alpha=0.85, max_iterations=400 ,v=None, algo="iterative", rr
         return np.round(x, 3)
     return x
 
-def pageRank_exact(graph, alpha=0.85, v=None, rround="yes"): 
+def pageRank_exact(graph, alpha=0.85, rround="yes"): 
     """
     Exact resolution for the PageRank problem. It is done by solving the linear system
     associated to the problem as shown in Gleich's paper. We still use the weakly preferential
@@ -100,10 +95,6 @@ def pageRank_exact(graph, alpha=0.85, v=None, rround="yes"):
         The graph containing the nodes to compute the PageRank for.
     alpha : float, optional
         The damping parameter of the algorithm. The default is 0.85.
-    v : numpy array, optional
-        Teleportation vector. Each element represent the probability of moving to a certain
-        node in the teleportation step of the random surfer. The default is a uniform distribution
-        over all nodes. For the meaning of v, see the papers.
     rround : string, optional
         String value to apply a rounding of the pg values to the first 3 decimal digits. 
         The default is "yes".
@@ -117,8 +108,7 @@ def pageRank_exact(graph, alpha=0.85, v=None, rround="yes"):
     """
     P = P_matrix(graph)   
     N = len(graph)
-    if v is None:
-        v = np.repeat(1.0/N, N)
+    v = np.repeat(1.0/N, N)
     
     # this time we need to complete P as to make it a stochastic matrix
     c = np.sum(P, axis=0) == 0
