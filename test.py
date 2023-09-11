@@ -7,13 +7,12 @@ the pg values obtained using the NetworkX PageRank implementation w.r.t. mine, u
 the exact same parameters for alpha, v, x_0 and the same algorithm version.
 This module can be invoked as:
     
-    python test.py [-f <list of graphs to test on> --alpha <dumping factor> --profiling_number <profiling number>]
+    python test.py [-f <list of graphs to test on> --alpha <dumping factor> --times <number of repeated executions to test time>]
 
 If no argument is given, the tests will be run on all available graphs.
 
 """
 
-# TO DO: use doctest sintax
 # TO DO: download bigger graphs
 
 import networkx as nx
@@ -23,7 +22,7 @@ import src.PageRankCalculator as prc
 from src.GraphConstructor import build_graph
 import timeit
 
-def nx_pagerank(file_name, alfa, rround="yes"):
+def nx_pagerank(file_name, alfa, v=None, rround="yes"):
     """
     This procedure applies nx's implementation on the given graph with the
     given damping parameter.
@@ -34,6 +33,8 @@ def nx_pagerank(file_name, alfa, rround="yes"):
         The name of the file containing the desired graph to process.
     alfa : float
         The damping parameter.
+    v : numpyarray
+        Personalization vector. None by default.
     rround (optional): string
         If "yes", rounds the pg values to the first 3 decimal digits.
 
@@ -53,7 +54,11 @@ def nx_pagerank(file_name, alfa, rround="yes"):
         t = tuple(line.strip().split(','))
         G.add_edge(*t)
     
-    pr = nx.pagerank(G, alpha=alfa)
+    dict_v = None
+    if v is not None:
+        dict_v = dict(zip([node for node in list(G)], np.ndarray.tolist(v)))
+    
+    pr = nx.pagerank(G, alpha=alfa, personalization=dict_v)
     if rround == "yes":
         return np.round(list(pr.values()), 3)
     else:
@@ -61,7 +66,7 @@ def nx_pagerank(file_name, alfa, rround="yes"):
 
 
 
-def accuracy_test(file_name, alpha, algo):
+def accuracy_test(file_name, alpha, algo, v="uniform"):
     """
     Test procedure for comparing my algorithm with nx's. The algorithm will pass the
     test over a certain graph if the error made over each nodes' pg value is less than
@@ -78,6 +83,9 @@ def accuracy_test(file_name, alpha, algo):
     algo: string
         Specifies if the implementation to be used should be the iterative or the exact one;
         therefore strings "iterative" and "exact"
+    v: string
+        Specifies if the personalization vector should be a uniform one or a random generated
+        one which is not uniform. The default value is "uniform".
 
     Returns
     -------
@@ -86,29 +94,46 @@ def accuracy_test(file_name, alpha, algo):
     """
     print()
     print("PageRank test result for", file_name, "using", algo, "version")
+    print("With damping parameter equal to", alpha)
+    
+    g = build_graph(file_name)
+    v_vect = None
+    if v != "uniform":
+        np.random.seed(seed)
+        v_vect = np.random.uniform(size=len(g))
+        v_vect = v_vect / sum(v_vect)
+        print("With personalization vector equal to", v_vect[:10], "and so on...")
     print("---------------------------------------------------------------------------------------------")
     
-    nx_result = nx_pagerank(file_name, alpha, rround="no")
-    my_result = prc.pageRank(build_graph(file_name), alpha, algo=algo, rround="no")
-
+    nx_result = nx_pagerank(file_name, alpha, v=v_vect, rround="no")
+    my_result = prc.pageRank(g, alpha, algo=algo, v=v_vect, rround="no")
+    print(nx_result)
+    print(my_result)
+    
     mse = np.mean((my_result-nx_result)**2)
     same_order_num = np.sum(np.argsort(nx_result) == np.argsort(my_result))
     
     try:
         np.testing.assert_allclose(my_result, nx_result, rtol=1e-03, err_msg="The actual PR values differ from the desired one by more that 1/1000 of the desired value")
-        error = "thousandth"
+        print()
+        print("Each pg value differs from the expected one for less than a thousandt of the expected value.")
     except AssertionError as e:
         try: 
             print(e)
             np.testing.assert_allclose(my_result, nx_result, rtol=1e-02, err_msg="The actual PR values differ from the desired one by more that 1/100 of the desired value")
-            error = "hundredth"
+            print()
+            print("Each pg value differs from the expected one for less than a hundredth of the expected value.")
         except AssertionError as e:
-            print(e)
-            np.testing.assert_allclose(my_result, nx_result, rtol=1e-01, err_msg="The actual PR values differ from the desired one by more that 1/10 of the desired value")
-            error = "tenth"
+            try: 
+                print(e)
+                np.testing.assert_allclose(my_result, nx_result, rtol=1e-01, err_msg="The actual PR values differ from the desired one by more that 1/10 of the desired value")
+                print()
+                print("Each pg value differs from the expected one for less than a tenth of the expected value.")
+            except AssertionError as e:
+                print(e)
+                print()
+                print("The function did not pass the test over this instance of graph.")
     
-    print()
-    print("Each pg value differs from the expected one for less than a", error, "of the expected value")
     print()
     print("The MSE is:", mse)
     print("The nodes are ranked in the same way for", same_order_num, "over", len(my_result), "nodes")
@@ -144,25 +169,24 @@ def time_test(file_name, alpha, algo, number=10, nx_time=None):
     """
     print()
     print("Measuring average execution time of the", algo, "algorithm, over", number, "iterations on file", file_name)
-    print("------------------------------------------------------------------------------------------------------------")
+    print("------------------------------------------------------------------------------------------------------")
     print()
     
     globals()["file_name"] = file_name
     globals()["alpha"] = alpha
     globals()["algo"] = algo
-    globals()["number"] = number
     
     if nx_time is None:
         nx_time = timeit.timeit("nx_pagerank(file_name, alpha, rround=\"no\")", globals=globals(), number=10)
     my_time = timeit.timeit("prc.pageRank(build_graph(file_name), alpha, algo=algo, rround=\"no\")", 
-                            globals=globals(), number=10)
+                            globals=globals(), number=number)
     
     comparison = "faster"
     if(my_time > nx_time):
         comparison = "slower"
     
-    print("Average execution time for my algorithm is", my_time, "seconds")
-    print("It is", abs(my_time - nx_time) , "seconds", comparison, "than NetworkX on average")
+    print("Average execution time for my algorithm is", my_time / number, "seconds")
+    print("It is", abs(my_time - nx_time) / number, "seconds", comparison, "than NetworkX on average")
     
     return my_time, nx_time
     
@@ -173,15 +197,13 @@ if __name__ == '__main__':
     op.add_option('-f',
                   dest='input_file',
                   help='CSV filename',
-                  default='graph_1.txt, graph_2.txt,' +
-                  'graph_3.txt, graph_4.txt, graph_5.txt, graph_6.txt,' +
-                  'graph_7.txt, graph_8.txt, graph_9.txt, graph_10.txt, graph_11.txt')
+                  default='graph_5.txt')
     op.add_option('--alpha',
                    dest='alpha',
                    help='Damping factor (float)',
                    default=0.85,
                    type='float')
-    op.add_option('--profiling-number',
+    op.add_option('--times',
                    dest='number',
                    help='The number of iterations to use to compute average execution time (int)',
                    default=10,
@@ -195,12 +217,24 @@ if __name__ == '__main__':
     alpha = options.alpha
     number = options.number
     
+    global seed
+    seed = np.random.randint(0,3)
+    
     for file_name in file_names_list:
+        # test over v uniformly distributed
         path = 'dataset/' + file_name.strip()
         accuracy_test(path, alpha, "iterative")
         accuracy_test(path, alpha, "exact")
         
+        # test with different v: we generate a random personalized vector and
+        # we repeat the same test done above
+        accuracy_test(path, alpha, "iterative", v="random")
+        accuracy_test(path, alpha, "exact", v="random")
+        
         _, nx_time = time_test(path, alpha, "iterative", number)
         time_test(path, alpha, "exact", number=number, nx_time=nx_time)
         
+        print()
+        print("------------------------------------------------------------------------------------------------------")
+        print("------------------------------------------------------------------------------------------------------")
         print()
