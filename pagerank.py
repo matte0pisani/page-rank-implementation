@@ -6,13 +6,16 @@ Main module to execute the PageRank algorithm over a graph contained in the "dat
 folder.
 This module has to be invoked using the command:
         
-        python pagerank.py -f <graph_file_name> [--alpha <damping_factor>]
+        python pagerank.py -f <graph_file_name> [--alpha <damping_factor>
+                                                 --iterations <number of max iterations>
+                                                 --round <"yes" if round result, "no" otherwise>
+                                                 --algo <"exact" if use exact implementation> ]
         
 """
 
 from optparse import OptionParser
 from src.GraphConstructor import build_graph
-from src.PageRankCalculator import pageRank
+import src.PageRankCalculator as prc
 
 if __name__ == '__main__':
 
@@ -25,25 +28,32 @@ if __name__ == '__main__':
                    help='Damping factor (float)',
                    default=0.85,
                    type='float')
-    # TO DO
-    # optparser.add_option('--iteration',
-    #                      dest='iteration',
-    #                      help='Iteration (int)',
-    #                      default=500,
-    #                      type='int')
-    # TO DO: add more options, like initialization, v, exact, rround, ...
+    op.add_option('--iterations',
+                   dest='iterations',
+                   help='Number of max iterations (int)',
+                   default=400,
+                   type='int')
+    op.add_option('--round',
+                   dest='rround',
+                   help='Flag for rounding the results',
+                   default='yes',
+                   type='string')
+    op.add_option('--algo',
+                   dest='algo',
+                   help='Type of implementation to use',
+                   default='iterative',
+                   type='string')
 
     (options, args) = op.parse_args()
 
     file_path = 'dataset/' + options.input_file
     alpha = options.alpha
-
-    # TO DO: save results somewhere, to confront
-    # result_dir = 'result'
-    # fname = file_path.split('/')[-1].split('.')[0]
+    max_it = options.iterations
+    rround = options.rround
+    algo = options.algo
 
     g = build_graph(file_path)
 
-    PR1 = pageRank(g, alpha, algo="iterative") # TO DO: specify more options here
-    print("PageRank:")
-    print(PR1)
+    pr = prc.pageRank(g, alpha, algo=algo, max_iterations=max_it, rround=rround)
+    prc.pageRank_pretty_print(g, pr)
+    

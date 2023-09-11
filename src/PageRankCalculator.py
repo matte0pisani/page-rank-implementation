@@ -25,12 +25,11 @@ def P_matrix(graph):
 
     """
     AT = graph.adjacency_matrix().T
-    D = np.diag(AT.sum(axis=0))
-    P = np.matmul(AT, np.linalg.pinv(D))
-    
-    return P
+    d = AT.sum(axis=0)
+    d[d == 0] = 1
+    return AT / d
 
-def pageRank(graph, alpha=0.85, v=None, algo="iterative", rround="yes"):
+def pageRank(graph, alpha=0.85, max_iterations=400 ,v=None, algo="iterative", rround="yes"):
     """
     Returns the PageRank value for each of the nodes of the given graph, using the
     given parameters. It applies the weakly preferential policy for sink nodes (the random
@@ -62,34 +61,32 @@ def pageRank(graph, alpha=0.85, v=None, algo="iterative", rround="yes"):
         An array containing the pg value for each node. Each value refers to the node in graph
         which holds the same position in the graph's node list.
     """
-    # TO DO implement more policies for sink nodes?
-    # TO DO create iteration limit?
-    # TO DO add different initializations for x_0?
-    # TO DO should directly work with array or lists?
-    # TO DO should return a dictionary?
+    
     if algo == "exact":
         return pageRank_exact(graph, alpha, v, rround)
     
-    N = len(graph.nodes)
+    N = len(graph)
     P = P_matrix(graph)
     c = np.sum(P, axis=0) == 0
-    x = np.repeat(1.0/N, N)   # initialization vector
-    dangling = np.repeat(1.0/N, N)  # sink nodes policy vector
+    u = np.repeat(1.0/N, N)
+    x = u.copy()   # initialization vector
+    dangling = u.copy()  # sink nodes policy vector
     if v is None:   # teleportation vector
-        v = np.repeat(1.0/N, N)
+        v = u.copy()
     
     threshold= 1e-16
     error = 1
     
-    while error > threshold:
+    for i in range(max_iterations):
         x_old = x
         x = alpha*(P @ x_old + (np.inner(c, x_old) * dangling)) + (1-alpha) * v
         error = np.linalg.norm((x - x_old), ord=1)  # use norm 1 to convergence
+        if error < threshold:
+            break
 
     if rround == "yes":
         return np.round(x, 3)
-    else: 
-        return x
+    return x
 
 def pageRank_exact(graph, alpha=0.85, v=None, rround="yes"): 
     """
@@ -119,7 +116,7 @@ def pageRank_exact(graph, alpha=0.85, v=None, rround="yes"):
 
     """
     P = P_matrix(graph)   
-    N = len(graph.nodes)
+    N = len(graph)
     if v is None:
         v = np.repeat(1.0/N, N)
     
@@ -132,8 +129,15 @@ def pageRank_exact(graph, alpha=0.85, v=None, rround="yes"):
     
     if rround == "yes":
         return np.round(x, 3)
-    else: 
-        return x
+    return x
 
-# TO DO: method for printing stuff
+def pageRank_pretty_print(graph, pg_values):
+    print()
+    print("Page rank values:")
+    print("-----------------------")
+    nodes = graph.nodes
     
+    for i in range(len(graph.nodes)):
+        print("Node", i+1, " [id: " + nodes[i].name + "]:", pg_values[i])
+    print()
+     

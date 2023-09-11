@@ -47,6 +47,8 @@ class Graph:
             A[i] = row
         return A
             
+    def __len__(self):
+        return len(self.nodes)
 
 class Node:
     """
@@ -74,4 +76,5 @@ class Node:
         
     def __repr__(self):
         return "node " + self.name
+    
 
