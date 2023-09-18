@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: matte
+@author: Matteo Pisani
 
 Main module to execute the PageRank algorithm over a graph contained in the "dataset"
 folder.

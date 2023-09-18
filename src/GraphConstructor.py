@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: matte
+@author: Matteo Pisani
 This module contains some utility functions to build graphs and graphs' text encodings following
 the edge list convention.
 """
@@ -16,7 +16,7 @@ def build_graph(file_name):
     Parameters
     ----------
     file_name : string
-        The relative path to the file containing the graph definition.
+        The relative path (from the dataset folder) to the file containing the graph definition.
 
     Returns
     -------

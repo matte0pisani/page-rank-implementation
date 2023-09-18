@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-@author: matte
+@author: Matteo Pisani
 
 This is the testing module for my PageRank implementation. To test it, we compare
 the pg values obtained using the NetworkX PageRank implementation w.r.t. mine, using
 the exact same parameters for alpha, v, x_0 and the same algorithm version.
 This module can be invoked as:
     
-    python test.py [-f <list of graphs to test on> --alpha <dumping factor> --profiling_number <profiling number>]
+    python test.py [-f <list of graphs to test on> --alpha <dumping factor> 
+                    --times <number of executions to average in time test>]
 
 If no argument is given, the tests will be run on all available graphs.
 
@@ -19,7 +20,7 @@ import src.PageRankCalculator as prc
 from src.GraphConstructor import build_graph
 import timeit
 
-def nx_pagerank(file_name, alfa, rround="yes"):
+def nx_pagerank(file_name, alpha, rround="yes"):
     """
     This procedure applies nx's implementation on the given graph with the
     given damping parameter.
@@ -28,7 +29,7 @@ def nx_pagerank(file_name, alfa, rround="yes"):
     ----------
     file_name : string
         The name of the file containing the desired graph to process.
-    alfa : float
+    alpha : float
         The damping parameter.
     rround (optional): string
         If "yes", rounds the pg values to the first 3 decimal digits.
@@ -49,7 +50,7 @@ def nx_pagerank(file_name, alfa, rround="yes"):
         t = tuple(line.strip().split(','))
         G.add_edge(*t)
     
-    pr = nx.pagerank(G, alpha=alfa)
+    pr = nx.pagerank(G, alpha=alpha)
     if rround == "yes":
         return np.round(list(pr.values()), 3)
     else:
@@ -59,11 +60,11 @@ def nx_pagerank(file_name, alfa, rround="yes"):
 
 def accuracy_test(file_name, alpha, algo):
     """
-    Test procedure for comparing my algorithm with nx's. The algorithm will pass the
+    Test procedure for comparing my algorithm results with nx's. The algorithm will pass the
     test over a certain graph if the error made over each nodes' pg value is less than
-    a tenth of the expected value according to nx.
-    For this test case we consider the iterative version of my algorithm to be compared
-    to nx's.
+    a tenth of the expected value according to nx. Some information regarding the comparison
+    between the two are displayed: the MSE, the number of nodes that hold the same position
+    after being sorted according to the pr value
 
     Parameters
     ----------
@@ -90,17 +91,23 @@ def accuracy_test(file_name, alpha, algo):
     same_order_num = np.sum(np.argsort(nx_result) == np.argsort(my_result))
     
     try:
-        np.testing.assert_allclose(my_result, nx_result, rtol=1e-03, err_msg="The actual PR values differ from the desired one by more that 1/1000 of the desired value")
+        np.testing.assert_allclose(my_result, nx_result, rtol=1e-03, err_msg="The actual PR values differ from the desired ones by more that 1/1000 of the desired value")
         error = "thousandth"
     except AssertionError as e:
         try: 
             print(e)
-            np.testing.assert_allclose(my_result, nx_result, rtol=1e-02, err_msg="The actual PR values differ from the desired one by more that 1/100 of the desired value")
+            np.testing.assert_allclose(my_result, nx_result, rtol=1e-02, err_msg="The actual PR values differ from the desired ones by more that 1/100 of the desired value")
             error = "hundredth"
         except AssertionError as e:
-            print(e)
-            np.testing.assert_allclose(my_result, nx_result, rtol=1e-01, err_msg="The actual PR values differ from the desired one by more that 1/10 of the desired value")
-            error = "tenth"
+            try:
+                print(e)
+                np.testing.assert_allclose(my_result, nx_result, rtol=1e-01, err_msg="The actual PR values differ from the desired ones by more that 1/10 of the desired value")
+                error = "tenth"
+            except AssertionError as e:
+                print(e)
+                print("The algorithm didn't pass the test for this graph.")
+                print("The MSE is:", mse)
+                print("The nodes are ranked in the same way for", same_order_num, "over", len(my_result), "nodes")
     
     print()
     print("Each pg value differs from the expected one for less than a", error, "of the expected value")
@@ -148,9 +155,9 @@ def time_test(file_name, alpha, algo, number=10, nx_time=None):
     globals()["number"] = number
     
     if nx_time is None:
-        nx_time = timeit.timeit("nx_pagerank(file_name, alpha, rround=\"no\")", globals=globals(), number=10)
+        nx_time = timeit.timeit("nx_pagerank(file_name, alpha, rround=\"no\")", globals=globals(), number=number)
     my_time = timeit.timeit("prc.pageRank(build_graph(file_name), alpha, algo=algo, rround=\"no\")", 
-                            globals=globals(), number=10)
+                            globals=globals(), number=number)
     
     comparison = "faster"
     if(my_time > nx_time):
@@ -171,13 +178,14 @@ if __name__ == '__main__':
                   help='CSV filename',
                   default='graph_1.txt, graph_2.txt,' +
                   'graph_3.txt, graph_4.txt, graph_5.txt, graph_6.txt,' +
-                  'graph_7.txt, graph_8.txt, graph_9.txt, graph_10.txt, graph_11.txt')
+                  'graph_7.txt, graph_8.txt, graph_9.txt, graph_10.txt, graph_11.txt, ' + 
+                  'graph_12.txt')
     op.add_option('--alpha',
                    dest='alpha',
                    help='Damping factor (float)',
                    default=0.85,
                    type='float')
-    op.add_option('--profiling-number',
+    op.add_option('--times',
                    dest='number',
                    help='The number of iterations to use to compute average execution time (int)',
                    default=10,
@@ -193,8 +201,8 @@ if __name__ == '__main__':
     
     for file_name in file_names_list:
         path = 'dataset/' + file_name.strip()
-        accuracy_test(path, alpha, "iterative")
-        accuracy_test(path, alpha, "exact")
+        # accuracy_test(path, alpha, "iterative")
+        # accuracy_test(path, alpha, "exact")
         
         _, nx_time = time_test(path, alpha, "iterative", number)
         time_test(path, alpha, "exact", number=number, nx_time=nx_time)

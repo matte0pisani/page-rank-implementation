@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-@author: matte
+@author: Matteo Pisani
 This module is to model graphs and nodes; I added only the essential aspects of the two, without
-implementing the full ADT. Note that, apart from the adiacency matrix method, we never really
-use those classes except when building the graph using the "build_graph" method.
+implementing the full ADT.
 
 """
 
@@ -17,6 +16,9 @@ class Graph:
     """
     def __init__(self):
         self.nodes = []
+    
+    def __len__(self):
+        return len(self.nodes)
     
     def contains(self, name):
         for node in self.nodes:
@@ -46,21 +48,20 @@ class Graph:
             row = [node.name in children for node in self.nodes]
             A[i] = row
         return A
-            
-    def __len__(self):
-        return len(self.nodes)
 
 class Node:
     """
     This class represents a node. A node has some children and parents, which we could 
-    link to it using its methods.
+    link to using its methods.
     """
-    # TODO: enforce symmetry in father-son relations and uniqueness of names
     
     def __init__(self, name):
         self.name = name
         self.children = []
         self.parents = []
+        
+    def __repr__(self):
+        return "node " + self.name
 
     def link_child(self, new_child):
         for child in self.children:
@@ -74,7 +75,3 @@ class Node:
                 return None
         self.parents.append(new_parent)
         
-    def __repr__(self):
-        return "node " + self.name
-    
-
