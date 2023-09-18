@@ -63,7 +63,7 @@ def accuracy_test(file_name, alpha, algo):
     Test procedure for comparing my algorithm results with nx's. The algorithm will pass the
     test over a certain graph if the error made over each nodes' pg value is less than
     a tenth of the expected value according to nx. Some information regarding the comparison
-    between the two are displayed: the MSE, the number of nodes that hold the same position
+    between the two are displayed: the MSE and the number of nodes that hold the same position
     after being sorted according to the pr value
 
     Parameters
@@ -74,7 +74,7 @@ def accuracy_test(file_name, alpha, algo):
         Damping parameter.
     algo: string
         Specifies if the implementation to be used should be the iterative or the exact one;
-        therefore strings "iterative" and "exact"
+        therefore strings "iterative" and "exact".
 
     Returns
     -------
@@ -128,11 +128,11 @@ def time_test(file_name, alpha, algo, number=10, nx_time=None):
         The graph to test on.
     alpha : float
         Damping parameter.
-    number: int (optional)
-        The number of repeated executions for the two implementations to average on. By default it equals 10.
     algo: string
         Specifies if the implementation to be used should be the iterative or the exact one;
         therefore strings "iterative" and "exact"
+    number: int (optional)
+        The number of repeated executions for the two implementations to average on. By default it equals 10.
     nx_time: float (optional)
         The average reference time the implementations should be compared to; if not given it is computed
         inside the function. The default value is None to represent that no reference time was given to the
@@ -140,8 +140,10 @@ def time_test(file_name, alpha, algo, number=10, nx_time=None):
 
     Returns
     -------
-    float tuple
-        The average values for the chosen PageRankCalculator implementation and nx's given the parameters.
+    my_time: float
+        The average execution time of the custom implementation of PageRank
+    nx_time: float
+        The average execution time over the given graph for nx's library implementation
 
     """
     print()
@@ -178,8 +180,7 @@ if __name__ == '__main__':
                   help='CSV filename',
                   default='graph_1.txt, graph_2.txt,' +
                   'graph_3.txt, graph_4.txt, graph_5.txt, graph_6.txt,' +
-                  'graph_7.txt, graph_8.txt, graph_9.txt, graph_10.txt, graph_11.txt, ' + 
-                  'graph_12.txt')
+                  'graph_7.txt, graph_8.txt, graph_9.txt, graph_10.txt, graph_11.txt')
     op.add_option('--alpha',
                    dest='alpha',
                    help='Damping factor (float)',
@@ -201,8 +202,8 @@ if __name__ == '__main__':
     
     for file_name in file_names_list:
         path = 'dataset/' + file_name.strip()
-        # accuracy_test(path, alpha, "iterative")
-        # accuracy_test(path, alpha, "exact")
+        accuracy_test(path, alpha, "iterative")
+        accuracy_test(path, alpha, "exact")
         
         _, nx_time = time_test(path, alpha, "iterative", number)
         time_test(path, alpha, "exact", number=number, nx_time=nx_time)
